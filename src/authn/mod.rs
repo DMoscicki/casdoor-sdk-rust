@@ -2,11 +2,12 @@ mod models;
 
 use crate::{Method, QueryArgs, QueryResult, Sdk, SdkResult, NO_BODY};
 use anyhow::{format_err, Result};
-use jsonwebtoken::{
-    DecodingKey, TokenData, Validation,
-};
+use jsonwebtoken::{DecodingKey, TokenData, Validation};
 pub use models::*;
-pub use oauth2::{basic::{BasicTokenIntrospectionResponse, BasicTokenType}, TokenIntrospectionResponse, TokenResponse};
+pub use oauth2::{
+    basic::{BasicTokenIntrospectionResponse, BasicTokenType},
+    TokenIntrospectionResponse, TokenResponse,
+};
 use oauth2::{url, AccessToken, AuthUrl, AuthorizationCode, ClientId, ClientSecret, IntrospectionUrl, RedirectUrl, RefreshToken, TokenUrl};
 use openssl::pkey::Id;
 use openssl::{
@@ -132,9 +133,14 @@ impl AuthSdk {
 
         let pb_key = self.sdk.replace_cert_to_pub_key().unwrap();
 
-        let td = get_tk(pb_key, validation, token).unwrap();
-
-        Ok(td.claims)
+        match get_tk(pb_key, validation, token) {
+            Ok(td) => {
+                return Ok(td.claims);
+            }
+            Err(e) => {
+                return Err(e.downcast().unwrap());
+            }
+        }
     }
 
     pub fn get_signing_url(&self, redirect_url: String) -> String {
@@ -251,24 +257,22 @@ fn get_tk(pb_key: PKey<Public>, validation: Validation, token: &str) -> Result<T
             let token_data: TokenData<ClaimsStandard> = jsonwebtoken::decode(token, decode_key, &validation)?;
 
             Ok(token_data)
-        },
+        }
         Id::EC => {
             let ec_pb_key = pb_key.ec_key()?.public_key_to_pem()?;
             let decode_key = &DecodingKey::from_ec_pem(&ec_pb_key)?;
             let token_data: TokenData<ClaimsStandard> = jsonwebtoken::decode(token, decode_key, &validation)?;
 
             Ok(token_data)
-        },
+        }
         Id::RSA_PSS => {
             let ec_pb_key = pb_key.rsa()?.public_key_to_pem()?;
             let decode_key = &DecodingKey::from_rsa_pem(&ec_pb_key)?;
             let token_data: TokenData<ClaimsStandard> = jsonwebtoken::decode(token, decode_key, &validation)?;
 
             Ok(token_data)
-        },
-        _ => {
-            Err(format_err!("not supported"))
-        },
+        }
+        _ => Err(format_err!("not supported")),
     }
 }
 
@@ -288,9 +292,9 @@ mod tests {
             "7d315de093a1b8268d0c7eb192bbe02f35a8877d".to_string(),
             cert,
             "built-in".to_string(),
-            Some("app-built-in".to_owned())
+            Some("app-built-in".to_owned()),
         )
-            .into_sdk();
+        .into_sdk();
 
         let authnx = cfg.authn();
 
@@ -308,9 +312,9 @@ mod tests {
             "secret".to_string(),
             cert,
             "Kubernetes".to_string(),
-            Some("Cluster".to_owned())
+            Some("Cluster".to_owned()),
         )
-            .into_sdk();
+        .into_sdk();
 
         let authnx = cfg.authn();
 
@@ -327,9 +331,9 @@ mod tests {
             "secret".to_string(),
             cert,
             "Kubernetes".to_string(),
-            Some("Cluster".to_owned())
+            Some("Cluster".to_owned()),
         )
-            .into_sdk();
+        .into_sdk();
 
         let authnx = cfg.authn();
 
@@ -348,7 +352,7 @@ mod tests {
             "secret".to_string(),
             cert,
             "org_name".to_string(),
-            Some("app_name".to_owned())
+            Some("app_name".to_owned()),
         )
         .into_sdk();
 
@@ -369,7 +373,7 @@ mod tests {
             "secret".to_string(),
             cert,
             "org_name".to_string(),
-            Some("app_name".to_owned())
+            Some("app_name".to_owned()),
         )
         .into_sdk();
 
@@ -390,7 +394,7 @@ mod tests {
             "secret".to_string(),
             cert,
             "org_name".to_string(),
-            Some("app_name".to_owned())
+            Some("app_name".to_owned()),
         )
         .into_sdk();
 
@@ -412,7 +416,7 @@ mod tests {
             "secret".to_string(),
             cert,
             "org_name".to_string(),
-            Some("app_name".to_owned())
+            Some("app_name".to_owned()),
         )
         .into_sdk();
 
@@ -432,7 +436,7 @@ mod tests {
             "secret".to_string(),
             cert,
             "org_name".to_string(),
-            Some("app_name".to_owned())
+            Some("app_name".to_owned()),
         )
         .into_sdk();
 

@@ -1,7 +1,11 @@
 use std::{fs::File, io::Read};
 
+use openssl::{
+    error::ErrorStack,
+    pkey::{PKey, Public},
+    x509::X509,
+};
 use serde::{Deserialize, Serialize};
-use openssl::{error::ErrorStack, pkey::{PKey, Public}, x509::X509};
 
 /// Config is the core configuration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -22,21 +26,14 @@ pub struct Config {
 
 impl Config {
     /// Create a new Config.
-    pub fn new(
-        endpoint: String,
-        client_id: String,
-        client_secret: String,
-        certificate: String,
-        org_name: String,
-        app_name: Option<String>,
-    ) -> Self {
+    pub fn new(endpoint: String, client_id: String, client_secret: String, certificate: String, org_name: String, app_name: Option<String>) -> Self {
         Config {
             endpoint,
             client_id,
             client_secret,
             certificate,
             org_name,
-            app_name
+            app_name,
         }
     }
 
